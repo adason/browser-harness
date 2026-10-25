@@ -1,4 +1,9 @@
-"""Best-effort, opt-out telemetry for browser-harness."""
+"""Best-effort, opt-in telemetry for browser-harness.
+
+Disabled by default. Enable with `browser-harness telemetry enable`
+(persistent) or BH_TELEMETRY=1 (per-process). BH_TELEMETRY=0 (and the
+legacy names) force it off regardless of config.
+"""
 
 from __future__ import annotations
 
@@ -83,6 +88,10 @@ def _env_disabled() -> bool:
     return any((os.environ.get(name) or "").lower() in {"0", "false", "no", "off"} for name in DISABLE_ENVS)
 
 
+def _env_enabled() -> bool:
+    return (os.environ.get("BH_TELEMETRY") or "").lower() in {"1", "true", "yes", "on"}
+
+
 def _valid_install_id(raw) -> bool:
     return isinstance(raw, str) and re.fullmatch(r"[0-9a-f-]{32,36}", raw) is not None
 
@@ -102,17 +111,18 @@ def _install_id(config: dict | None = None, *, create: bool = True) -> str | Non
 def is_enabled() -> bool:
     if _env_disabled():
         return False
-    return not bool(_load_config().get("disabled"))
+    if _env_enabled():
+        return True
+    return bool(_load_config().get("enabled"))
 
 
 def status() -> dict:
     config = _load_config()
-    env_disabled = _env_disabled()
-    enabled = not env_disabled and not bool(config.get("disabled"))
+    enabled = is_enabled()
     return {
         "enabled": enabled,
-        "disabled_by_env": env_disabled,
-        "disabled_by_config": bool(config.get("disabled")),
+        "disabled_by_env": _env_disabled(),
+        "enabled_by_config": bool(config.get("enabled")),
         "install_id": _install_id(config, create=enabled),
         "config_path": str(_config_path()),
     }
@@ -120,7 +130,8 @@ def status() -> dict:
 
 def set_enabled(enabled: bool) -> dict:
     config = _load_config()
-    config["disabled"] = not enabled
+    config["enabled"] = bool(enabled)
+    config.pop("disabled", None)  # migrate legacy opt-out key
     _save_config(config)
     return status()
 

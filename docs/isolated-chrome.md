@@ -12,8 +12,11 @@ instance; the daily browser is never attached.
    `~/.local/bin/browser-harness.uv`.
 2. Dedicated Chrome only: `--user-data-dir=$HOME/.browser-harness-chrome
    --remote-debugging-port=9333`. Own cookie jar, zero overlap with daily Chrome.
-3. Telemetry OFF (`~/.config/browser-harness/telemetry.json` → `"disabled": true`).
-   Verified 2026-07-21. If it flips back on, run `browser-harness telemetry disable`.
+3. Telemetry OFF. Two layers: fork code is opt-in by default
+   (`telemetry.py` `is_enabled()` returns False unless `telemetry enable` / config
+   `"enabled": true` / `BH_TELEMETRY=1`), and this machine also carries a legacy
+   `"disabled": true` in `~/.config/browser-harness/telemetry.json`. Verify:
+   `browser-harness telemetry status` → `"enabled": false`.
 4. Daily Chrome: remote debugging via `chrome://inspect` stays OFF. Never attach to
    9222/9223.
 5. Never run: `browser-harness --update` (agent-triggered self-update is disabled
