@@ -52,28 +52,27 @@ browser-harness telemetry status | grep '"enabled": false'
 curl -s --max-time 2 http://127.0.0.1:9333/json/version | head -c 120
 ```
 
-## After upgrading the tool (`uv tool upgrade browser-harness`)
+## Upgrading the tool (fork flow — NOT `uv tool upgrade`)
 
-`uv tool upgrade` may replace `~/.local/bin/browser-harness` with its own
-launcher, silently destroying the wrapper. Check and re-apply if needed:
+The installed CLI is this fork, so `uv tool upgrade browser-harness` would
+silently replace it with upstream — do not run it. Upgrade path:
 
 ```bash
-head -1 ~/.local/bin/browser-harness   # want: #!/bin/sh (wrapper), NOT a python shebang
+git fetch upstream && git rebase upstream/main   # resolve, then `uv run --with pytest pytest tests/unit -q`
+git push origin main
+uv tool install --force <repo-path>
+mv ~/.local/bin/browser-harness ~/.local/bin/browser-harness.uv
+cp bin/browser-harness-wrap.sh ~/.local/bin/browser-harness && chmod +x ~/.local/bin/browser-harness
+browser-harness --reload
 ```
 
-If replaced: `mv ~/.local/bin/browser-harness ~/.local/bin/browser-harness.uv`
-then recreate the wrapper:
+After rebasing, check upstream did not re-land telemetry/cookie defaults you
+hardened (telemetry must stay opt-in; verify `bin/browser-harness-wrap.sh`
+still matches the launcher name).
 
-```sh
-#!/bin/sh
-BU_CDP_URL="${BU_CDP_URL:-http://127.0.0.1:9333}"
-export BU_CDP_URL
-exec "$(dirname "$0")/browser-harness.uv" "$@"
-```
-
-Also: skill copy at `~/.agents/skills/browser-harness/` may re-sync from GitHub —
-the `REQUIRED: isolated Chrome only` section at the top of `SKILL.md` gets clobbered.
-Re-add it (it is self-describing) or diff after `npx skills` updates.
+Also: skill copy at `~/.agents/skills/browser-harness/` — install/sync it from
+this FORK, not the upstream repo, so the `REQUIRED: isolated Chrome only`
+section survives re-syncs.
 
 ## If teardown is wanted
 
