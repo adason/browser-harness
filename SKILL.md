@@ -21,7 +21,7 @@ This machine never attaches to the daily browser. Before any browser use:
 3. Never use the daily Chrome profile: do not enable `chrome://inspect` remote debugging on the daily browser, never attach to 9222/9223, never set `BU_CDP_URL`/`BU_CDP_WS` to another host.
 4. Logins live only in `~/.browser-harness-chrome`. If a site needs a login the agent cannot complete, tell the user to log in once in the dedicated window — do not fall back to the daily browser.
 5. Forbidden: `browser-harness --update` (user updates manually), `profile.sh | sh`, `sync_local_profile(...)`, `start_remote_daemon(...)`/Browser Use Cloud, `BH_DOMAIN_SKILLS=1`.
-6. Full rationale and recovery: `docs/isolated-chrome.md` in this skill folder (machine copy: `~/browser-harness-setup.md`).
+6. Full rationale and recovery: `docs/isolated-chrome.md` in this skill folder.
 
 ## When Not to Use
 
